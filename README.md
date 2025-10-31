@@ -2,6 +2,10 @@
 
 Model Context Protocol (MCP) server for Basecamp integration. Enables LLMs to interact with Basecamp projects, messages, todos, comments, people, and kanban boards.
 
+<a href="https://glama.ai/mcp/servers/@stefanoverna/basecamp-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@stefanoverna/basecamp-mcp/badge" alt="Basecamp Server MCP server" />
+</a>
+
 ## Getting Started
 
 The Basecamp MCP server requires Node.js 18+ and works with various MCP clients including Claude Code CLI, Claude Desktop, Cursor, VS Code, and others.
