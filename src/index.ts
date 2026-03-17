@@ -28,6 +28,7 @@ import { registerMessageTools } from "./tools/messages.js";
 import { registerPeopleTools } from "./tools/people.js";
 // Import tool registration functions
 import { registerProjectTools } from "./tools/projects.js";
+import { registerSearchTools } from "./tools/search.js";
 import { registerTodoTools } from "./tools/todos.js";
 import { registerUploadTools } from "./tools/uploads.js";
 
@@ -71,6 +72,7 @@ async function main() {
   registerActivityTools(server);
   registerDocumentTools(server);
   registerUploadTools(server);
+  registerSearchTools(server);
   console.error("Tools registered successfully");
 
   // Create stdio transport

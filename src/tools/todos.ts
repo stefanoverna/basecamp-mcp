@@ -18,6 +18,69 @@ import { serializePerson } from "../utils/serializers.js";
 
 export function registerTodoTools(server: McpServer): void {
   server.registerTool(
+    "basecamp_get_todo",
+    {
+      title: "Get Basecamp Todo",
+      description:
+        "Get a specific todo item by ID with full details including description, assignees, completion status, and dates.",
+      inputSchema: {
+        bucket_id: BasecampIdSchema,
+        todo_id: BasecampIdSchema,
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async (params) => {
+      try {
+        const client = await initializeBasecampClient();
+        const response = await client.todos.get({
+          params: { bucketId: params.bucket_id, todoId: params.todo_id },
+        });
+
+        if (response.status !== 200 || !response.body) {
+          throw new Error(`Failed to fetch todo: ${response.status}`);
+        }
+
+        const todo = response.body;
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  id: todo.id,
+                  title: todo.content,
+                  description: todo.description,
+                  completed: todo.completed,
+                  position: todo.position,
+                  due_on: todo.due_on,
+                  starts_on: todo.starts_on,
+                  url: todo.app_url,
+                  comments_count: todo.comments_count,
+                  assignees: todo.assignees.map(serializePerson),
+                  creator: serializePerson(todo.creator),
+                  created_at: todo.created_at,
+                  updated_at: todo.updated_at,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
     "basecamp_get_todoset",
     {
       title: "Get Basecamp Todo Set",
@@ -366,6 +429,157 @@ export function registerTodoTools(server: McpServer): void {
             {
               type: "text",
               text: `Todo updated!\n\nID: ${response.body.id}\nContent: ${response.body.content}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "basecamp_reposition_todo",
+    {
+      title: "Reposition Basecamp Todo",
+      description:
+        "Change the position of a todo within its list. Position is 1-based.",
+      inputSchema: {
+        bucket_id: BasecampIdSchema,
+        todo_id: BasecampIdSchema,
+        position: z
+          .number()
+          .min(1)
+          .describe("New position within the list (1-based)"),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async (params) => {
+      try {
+        const client = await initializeBasecampClient();
+        await client.todos.reposition({
+          params: { bucketId: params.bucket_id, todoId: params.todo_id },
+          body: { position: params.position },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Todo repositioned to position ${params.position}!`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "basecamp_archive_todo",
+    {
+      title: "Archive Basecamp Todo",
+      description:
+        "Archive a todo. Archived todos remain available but are hidden from active views. Use basecamp_list_todos with status 'archived' to find them.",
+      inputSchema: {
+        bucket_id: BasecampIdSchema,
+        todo_id: BasecampIdSchema,
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async (params) => {
+      try {
+        const client = await initializeBasecampClient();
+        await client.recordings.archive({
+          params: {
+            bucketId: params.bucket_id,
+            recordingId: params.todo_id,
+          },
+        });
+
+        return {
+          content: [{ type: "text", text: "Todo archived successfully!" }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "basecamp_get_todolist_groups",
+    {
+      title: "Get Basecamp Todo List Groups",
+      description:
+        "Get groups (sections) within a todo list. Groups organize todos into collapsible sections within a list.",
+      inputSchema: {
+        bucket_id: BasecampIdSchema,
+        todolist_id: BasecampIdSchema,
+        status: z
+          .enum(["active", "archived", "trashed"])
+          .default("active")
+          .optional()
+          .describe(
+            "Filter groups by status: 'active' (default), 'archived', or 'trashed'.",
+          ),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async (params) => {
+      try {
+        const client = await initializeBasecampClient();
+        const groups = await asyncPagedToArray({
+          fetchPage: client.todoListGroups.list,
+          request: {
+            params: {
+              bucketId: params.bucket_id,
+              todolistId: params.todolist_id,
+            },
+            query: { status: params.status },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  count: groups.length,
+                  groups: groups.map((g) => ({
+                    id: g.id,
+                    title: g.title,
+                    name: g.name,
+                    position: g.position,
+                    completed: g.completed,
+                    url: g.app_url,
+                  })),
+                },
+                null,
+                2,
+              ),
             },
           ],
         };

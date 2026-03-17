@@ -109,11 +109,16 @@ npm run dev
 - `basecamp_update_message` - Update message with advanced content editing (supports full replacement, append, prepend, search/replace)
 
 #### TODOs
+- `basecamp_get_todo` - Get a specific todo item by ID with full details (description, assignees, dates, position)
 - `basecamp_get_todoset` - Get todo set container with all todo lists
 - `basecamp_list_todos` - List todos in a list with status filtering (active/archived)
 - `basecamp_create_todo` - Create new todo with optional description
 - `basecamp_complete_todo` - Mark todo as complete
 - `basecamp_uncomplete_todo` - Mark todo as incomplete
+- `basecamp_update_todo` - Update todo with advanced content editing (supports full replacement, append, prepend, search/replace, plus title, assignees)
+- `basecamp_reposition_todo` - Change the position of a todo within its list
+- `basecamp_archive_todo` - Archive a todo (hidden from active views, still accessible via archived filter)
+- `basecamp_get_todolist_groups` - Get groups (sections) within a todo list with status filtering
 
 #### Comments
 - `basecamp_list_comments` - List comments on any resource (works universally on all recording types)
@@ -132,6 +137,23 @@ npm run dev
 - `basecamp_create_kanban_card` - Create new card with title, content, and optional checklist steps
 - `basecamp_update_kanban_card` - Update card with advanced content editing (supports full replacement, append, prepend, search/replace, plus title, due date, assignees, notifications, and complete step array management)
 - `basecamp_move_kanban_card` - Move a card to a different column and/or position
+
+#### Documents & Vaults
+- `basecamp_list_vaults` - List sub-vaults (folders) under a parent vault with optional regex filtering
+- `basecamp_get_vault` - Get vault details with document and sub-vault counts
+- `basecamp_create_vault` - Create a new vault (folder) under a parent vault
+- `basecamp_update_vault` - Update vault title
+- `basecamp_list_documents` - List documents in a vault with optional regex filtering
+- `basecamp_get_document` - Get a single document with full HTML content
+- `basecamp_create_document` - Create a document with HTML content and optional draft status
+- `basecamp_update_document` - Update document with advanced content editing (supports full replacement, append, prepend, search/replace)
+
+#### Uploads
+- `basecamp_list_uploads` - List uploaded files in a vault with optional regex filtering
+- `basecamp_download_file` - Download a file by its URL and return contents
+
+#### Search
+- `basecamp_search` - Search across Basecamp projects by title text with filtering by content type, project, and status
 
 #### Activity
 - `basecamp_list_recordings` - Browse recent activity globally or across specific projects, with filtering by type, date range, person, and text search. All filters support multiple values for OR-matching (e.g., multiple project IDs, person IDs, types, or search terms)
