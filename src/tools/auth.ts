@@ -10,7 +10,9 @@ import {
 import { handleBasecampError } from "../utils/errorHandlers.js";
 import {
   fetchBasecampAccounts,
+  getClientCredentials,
   performBasecampOAuthLogin,
+  refreshAccessToken,
 } from "../utils/oauth.js";
 
 export function registerAuthTools(server: McpServer): void {
@@ -179,6 +181,148 @@ export function registerAuthTools(server: McpServer): void {
                 null,
                 2,
               ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "basecamp_accounts",
+    {
+      title: "List Basecamp accounts (no re-auth)",
+      description:
+        "List all Basecamp accounts your current login can access, without opening a browser. " +
+        "Marks the currently active account. Use basecamp_switch_account to change it.",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async () => {
+      try {
+        const creds = await readCredentials();
+        if (!creds) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "Not logged in. Use basecamp_login to authenticate first.",
+              },
+            ],
+          };
+        }
+
+        const { clientId, clientSecret } = getClientCredentials();
+        const accessToken = await refreshAccessToken(
+          creds.refreshToken,
+          clientId,
+          clientSecret,
+        );
+        const accounts = await fetchBasecampAccounts(accessToken);
+
+        if (accounts.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "No Basecamp 3 accounts found for this login.",
+              },
+            ],
+          };
+        }
+
+        const list = accounts
+          .map(
+            (a) =>
+              `- ${a.name} (id: ${a.id})${String(a.id) === creds.accountId ? "  <- active" : ""}`,
+          )
+          .join("\n");
+
+        return {
+          content: [{ type: "text", text: `Available accounts:\n${list}` }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: handleBasecampError(error) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "basecamp_switch_account",
+    {
+      title: "Switch active Basecamp account (no re-auth)",
+      description:
+        "Switch the active Basecamp account WITHOUT re-authenticating. Reuses your existing " +
+        "login (stored refresh token), so no browser window is opened - ideal for automated or " +
+        "unattended use across multiple accounts. Your login must already belong to the target " +
+        "account; use basecamp_accounts to list available accounts.",
+      inputSchema: {
+        account_id: z.coerce
+          .number()
+          .describe("Basecamp account ID to switch the active session to."),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (params) => {
+      try {
+        const creds = await readCredentials();
+        if (!creds) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "Not logged in. Use basecamp_login to authenticate first.",
+              },
+            ],
+          };
+        }
+
+        const { clientId, clientSecret } = getClientCredentials();
+        const accessToken = await refreshAccessToken(
+          creds.refreshToken,
+          clientId,
+          clientSecret,
+        );
+        const accounts = await fetchBasecampAccounts(accessToken);
+        const match = accounts.find((a) => a.id === params.account_id);
+
+        if (!match) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Account ID ${params.account_id} not found for this login. Available accounts:\n${formatAccountList(accounts)}`,
+              },
+            ],
+          };
+        }
+
+        clearTokenCache();
+        await writeCredentials({
+          refreshToken: creds.refreshToken,
+          accountId: String(match.id),
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Switched active account to ${match.name} (id: ${match.id}). No browser needed.`,
             },
           ],
         };
