@@ -4,19 +4,19 @@
 [![npm downloads](https://img.shields.io/npm/dm/basecamp-mcp.svg)](https://www.npmjs.com/package/basecamp-mcp)
 [![license](https://img.shields.io/npm/l/basecamp-mcp.svg)](LICENSE)
 
-Model Context Protocol (MCP) server for Basecamp integration. Enables LLMs to interact with every corner of Basecamp: projects, messages, todos, comments, people, kanban boards, docs & files, check-ins, and campfire chat.
+Model Context Protocol (MCP) server for Basecamp. Gives LLMs tools for projects, messages, todos, comments, people, kanban boards, docs & files, check-ins, and campfire chat.
 
-**47 tools**, published on npm, installable with a single `npx` command — no cloning, no virtualenv, no manual OAuth scripts to run.
+47 tools, published on npm and installable with one `npx` command: no cloning, no virtualenv, no manual OAuth script to run.
 
 ## Why this server
 
-- **Zero-install setup.** `npx basecamp-mcp@latest` runs the server directly from npm. Authentication happens through one MCP tool call (`basecamp_login`) that opens a browser — no separate script to clone and run by hand.
-- **Full Docs & Files support.** Read and write vaults (folders), documents, and uploads, and download inline `<bc-attachment>` blobs embedded in rich text — images are returned inline, text files are returned as text, everything else is saved to disk.
-- **Check-ins (Q&A) support.** List automatic check-in questions and their answers, or post new answers programmatically.
-- **Granular content editing.** Messages, comments, documents, and kanban cards all support append/prepend/search-replace operations, not just full-text replacement — so an LLM can make a small edit without resending the whole document.
-- **Cross-project activity feed.** `basecamp_list_recordings` searches across every project by type, person, date range, and free text in one call, with automatic response-size management and pagination.
-- **Type-safe end to end.** Written in TypeScript with Zod schemas validating every tool input.
-- **Tested against the real API.** The test suite exercises every tool category (messages, todos, kanban, comments, docs/files, check-ins, campfires, activity) against a live Basecamp account, not just mocks.
+- **Zero-install setup:** `npx basecamp-mcp@latest` runs the server directly from npm. Authentication is one MCP tool call (`basecamp_login`) that opens a browser; there's no separate script to clone and run by hand.
+- **Full Docs & Files support:** read and write vaults (folders), documents, and uploads, and download inline `<bc-attachment>` blobs embedded in rich text. Images come back inline, text files as text, everything else saved to disk.
+- **Check-ins (Q&A) support:** list automatic check-in questions and their answers, or post new answers programmatically.
+- **Granular content editing:** messages, comments, documents, and kanban cards all support append, prepend, and search-replace operations, not just full-text replacement, so an LLM can make a small edit without resending the whole document.
+- **Cross-project activity feed:** `basecamp_list_recordings` searches across every project by type, person, date range, and free text in one call, with automatic response-size management and pagination.
+- **Type-safe end to end:** written in TypeScript with Zod schemas validating every tool input.
+- **Tested against the real API:** the test suite exercises every tool category (messages, todos, kanban, comments, docs/files, check-ins, campfires, activity) against a live Basecamp account, not mocks.
 
 ## Getting Started
 
@@ -65,7 +65,7 @@ code --add-mcp '{"name":"basecamp","command":"npx","args":["-y", "basecamp-mcp@l
 
 Once the MCP server is running, authenticate using the built-in login tool:
 
-1. Call `basecamp_login` — a browser window will open for Basecamp authorization
+1. Call `basecamp_login` to open a browser window for Basecamp authorization
 2. Authorize the app in your browser
 3. If you have multiple Basecamp accounts, call `basecamp_login` again with the desired `account_id`
 4. Done! Credentials are saved to `~/.config/basecamp-mcp/credentials.json`
@@ -137,7 +137,7 @@ The server requires these environment variables:
 - `basecamp_create_document` - Create a new document (active or draft)
 - `basecamp_update_document` - Update a document with advanced content editing (supports full replacement, append, prepend, search/replace)
 - `basecamp_list_uploads` - List files uploaded to a vault
-- `basecamp_get_upload` - Retrieve an uploaded file — images are returned inline, text files as text, other binary formats saved to disk
+- `basecamp_get_upload` - Retrieve an uploaded file: images are returned inline, text files as text, other binary formats saved to disk
 - `basecamp_download_blob` - Download an inline `<bc-attachment>` attachment referenced in document/message/comment HTML content
 
 ### Check-ins (Q&A)
